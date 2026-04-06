@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Dope World RP</title>
+
+<style>
+body {
+    background:#0a0a0a;
+    color:#00ff88;
+    font-family: monospace;
+}
+
+/* HEADER */
+.header {
+    padding:15px;
+    border-bottom:1px solid #00ff88;
+    display:flex;
+    justify-content:space-between;
+}
+
+/* BUTTONS */
+button {
+    background:black;
+    color:#00ff88;
+    border:1px solid #00ff88;
+    padding:5px;
+    cursor:pointer;
+}
+
+/* GRID */
+.products {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.card {
+    border:1px solid #00ff88;
+    padding:10px;
+    cursor:pointer;
+}
+
+/* CART */
+.cart {
+    position:fixed;
+    right:10px;
+    top:60px;
+    border:1px solid #00ff88;
+    padding:10px;
+}
+
+/* POPUP */
+.popup {
+    display:none;
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+}
+
+.box {
+    background:black;
+    border:1px solid #00ff88;
+    width:300px;
+    margin:100px auto;
+    padding:20px;
+}
+
+/* ADMIN */
+.admin {
+    display:none;
+    padding:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div>🌿 DOPE WORLD (RP)</div>
+    <button onclick="toggleAdmin()">ADMIN</button>
+</div>
+
+<div class="cart">
+🛒 Sepet: <span id="cartCount">0</span>
+<button onclick="showCart()">Gör</button>
+</div>
+
+<!-- MARKET -->
+<div id="market">
+    <div class="products" id="products"></div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin" id="admin">
+    <h2>Admin Panel</h2>
+    <input id="name" placeholder="Ürün adı"><br><br>
+    <input id="price" placeholder="Fiyat"><br><br>
+    <button onclick="addProduct()">Ekle</button>
+
+    <h3>Ürünler</h3>
+    <div id="list"></div>
+</div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+    <div class="box">
+        <h3 id="pname"></h3>
+        <input id="qty" placeholder="Miktar"><br><br>
+        <input id="rpname" placeholder="Oyun içi isim"><br><br>
+        <input id="location" placeholder="Buluşma yeri"><br><br>
+
+        <button onclick="addToCart()">Sepete Ekle</button>
+        <button onclick="closePopup()">Kapat</button>
+    </div>
+</div>
+
+<!-- CART POPUP -->
+<div class="popup" id="cartPopup">
+    <div class="box">
+        <h3>Sepet</h3>
+        <div id="cartItems"></div>
+        <button onclick="closeCart()">Kapat</button>
+    </div>
+</div>
+
+<script>
+let products = JSON.parse(localStorage.getItem("products")) || [
+    {name:"Skunk", price:70},
+    {name:"Hash", price:20}
+];
+
+let cart = [];
+let selected = null;
+
+/* LOAD PRODUCTS */
+function loadProducts(){
+    let html="";
+    products.forEach((p,i)=>{
+        html += `
+        <div class="card" onclick="openPopup(${i})">
+            <h3>${p.name}</h3>
+            <p>$${p.price}</p>
+        </div>`;
+    });
+    document.getElementById("products").innerHTML = html;
+}
+
+/* POPUP */
+function openPopup(i){
+    selected = i;
+    document.getElementById("popup").style.display="block";
+    document.getElementById("pname").innerText=products[i].name;
+}
+function closePopup(){
+    document.getElementById("popup").style.display="none";
+}
+
+/* CART */
+function addToCart(){
+    let item = {
+        product: products[selected],
+        qty: document.getElementById("qty").value,
+        rpname: document.getElementById("rpname").value,
+        location: document.getElementById("location").value
+    };
+
+    cart.push(item);
+    document.getElementById("cartCount").innerText=cart.length;
+    closePopup();
+}
+
+function showCart(){
+    let html="";
+    cart.forEach(c=>{
+        html += `<p>${c.product.name} x${c.qty}<br>
+        ${c.rpname} - ${c.location}</p><hr>`;
+    });
+    document.getElementById("cartItems").innerHTML=html;
+    document.getElementById("cartPopup").style.display="block";
+}
+function closeCart(){
+    document.getElementById("cartPopup").style.display="none";
+}
+
+/* ADMIN */
+function toggleAdmin(){
+    let admin = document.getElementById("admin");
+    let market = document.getElementById("market");
+
+    if(admin.style.display==="block"){
+        admin.style.display="none";
+        market.style.display="block";
+    } else {
+        admin.style.display="block";
+        market.style.display="none";
+        loadAdmin();
+    }
+}
+
+function addProduct(){
+    let name = document.getElementById("name").value;
+    let price = document.getElementById("price").value;
+
+    products.push({name,price});
+    localStorage.setItem("products",JSON.stringify(products));
+    loadProducts();
+    loadAdmin();
+}
+
+function deleteProduct(i){
+    products.splice(i,1);
+    localStorage.setItem("products",JSON.stringify(products));
+    loadProducts();
+    loadAdmin();
+}
+
+function loadAdmin(){
+    let html="";
+    products.forEach((p,i)=>{
+        html += `${p.name} - $${p.price}
+        <button onclick="deleteProduct(${i})">Sil</button><br>`;
+    });
+    document.getElementById("list").innerHTML=html;
+}
+
+loadProducts();
+</script>
+
+</body>
+</html>
